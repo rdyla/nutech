@@ -213,7 +213,7 @@ async function sendZoomSmsUserToken({ accessToken, fromE164, toE164, message, se
     body: JSON.stringify({
       message,
       sender: {
-        user_id: senderUserId,        // <-- add back (static)
+        user_id: senderUserId,
         phone_number: fromE164
       },
       to_members: [{ phone_number: toE164 }],
@@ -266,7 +266,6 @@ export default {
     // ---- OAuth endpoints ----
     if (req.method === "GET" && url.pathname === "/zoom/authorize") {
       const state = crypto.randomUUID();
-      // Optional: store state to KV to validate callback (skipped for speed)
       return Response.redirect(buildAuthorizeUrl(env, state), 302);
     }
 
@@ -293,28 +292,6 @@ export default {
       }
     }
 
-  // Serve docs from R2: GET /docs/<objectKey>
-if (req.method === "GET" && url.pathname.startsWith("/docs/")) {
-  // IMPORTANT: object keys may include spaces, so decode
-  const key = decodeURIComponent(url.pathname.replace("/docs/", ""));
-  if (!key) return new Response("Missing key", { status: 400 });
-
-  // nutech-docs is your R2 binding name (env binding is typically env.NUTECH_DOCS or env["nutech-docs"] depending on how you bound it)
-  const bucket = env["nutech-docs"];
-  if (!bucket) return new Response("Missing R2 binding", { status: 500 });
-
-  const obj = await bucket.get(key);
-  if (!obj) return new Response("Not found", { status: 404 });
-
-  const headers = new Headers();
-  obj.writeHttpMetadata(headers);
-  headers.set("etag", obj.httpEtag);
-  headers.set("cache-control", "public, max-age=3600");
-
-  return new Response(obj.body, { headers });
-}
-
-// ---- Work order create endpoint ----
 // ---- Work order create endpoint ----
 if (req.method === "POST" && url.pathname === "/work-orders/create") {
   if (!requireSecret(req, env)) {
@@ -380,19 +357,13 @@ if (req.method === "POST" && url.pathname === "/work-orders/create") {
       );
     }
 
-    // Your upstream returns: { success: true, work_order_number: "..." }
-    // If you truly don't care about the WO number, just return ok: true
-    // (But we can still pass through success for debugging.)
+    // Upstream returns: { success: true, work_order_number: "..." }
     return withCors(req, json({ ok: true }, 200));
-
-    // If you'd rather return the upstream success flag (still not exposing the number):
-    // return withCors(req, json({ ok: true, success: !!result.data?.success }, 200));
 
   } catch (e) {
     return withCors(req, json({ ok: false, error: e?.message || String(e) }, 500));
   }
 }
-
 
     // ---- SMS send endpoint ----
     if (req.method !== "POST" || url.pathname !== "/sms/send") {
