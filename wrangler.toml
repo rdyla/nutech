@@ -1,0 +1,14 @@
+name = "nutech"
+main = "worker.js" # or whatever your worker file is
+compatibility_date = "2026-03-04"
+
+# If you use modules syntax (export default { fetch() {}}) keep this:
+# (Wrangler v4 handles modules by default; no extra flag usually needed)
+
+kv_namespaces = [
+  { binding = "TOKENS_KV", id = "36f97458ee73427fabf90b01a6adac32" }
+]
+
+[vars]
+ZOOM_OAUTH_AUTHORIZE_URL = "https://zoom.us/oauth/authorize"
+# (optional: keep vars here or in dashboard)
